@@ -3,48 +3,91 @@
 
 from player import Player
 import redis
+import signal,sys
 
-r = redis.StrictRedis()
+class HomeSound:
+    def __init__(self):
+	self.r = redis.StrictRedis()
+	self.player = Player()
+	self.player.setUri(self.r.get('/radio/'+self.r.get('/radio/current')+'/uri'))
 
-player = Player()
-player.setUri(r.get('/radio/'+r.get('/radio/current')+'/uri'))
-player.play()
 
-ps = r.pubsub()
-ps.subscribe('/radioPlay')
-ps.subscribe('/airPlaying')
+    # Get (no arg) or Set (arg='0'/'1') redis /radioPlaying value
+    def radioPlaying(self,val=''):
+        if val == '':
+            return self.r.get('/radioPlaying')
+        else:
+            self.r.set('/radioPlaying',val)
 
-for item in ps.listen():
-    chan = item['channel']
-    msg = item['data']
-    
-    if item['type'] == 'message':
-      if chan == '/radioPlay':
-	  if msg == '':
-	      r.set('/radioPlaying','1')
-	      player.play()
-	      print 'Playing default radio'
-	  elif msg == '-1':
-	      r.set('/radioPlaying','0')
-	      player.stop()
-	      print 'Stop playing radio'
-	  else:
-	      choice = r.get('/radio/'+msg+'/uri')
-	      if choice != None:
-		  player.stop()
-		  r.set('/radio/current',msg)
-		  player.setUri(choice)
-		  r.set('/radioPlaying','1')
-		  player.play()
-		  print 'Playing radio '+msg
-      elif chan == '/airPlaying':
-	  if msg == '1':
-	      r.set('/airPlaying','1')
-	      player.stop()
-	      print 'Stop playing radio : AirPlay starts'
-	  else:
-	      r.set('/airPlaying','0')
-	      if r.get('/radioPlaying') == '1':
-		  player.play()
-		  print 'Resume radio playing : AirPlay stops'
+    # Get (no arg) or Set (arg='0'/'1') redis /airPlaying value
+    def airPlaying(self,val=''):
+        if val == '':
+            return self.r.get('/airPlaying')
+        else:
+            self.r.set('/airPlaying',val)
 
+    def changeCurrentRadio(self,id):
+	choice = self.r.get('/radio/'+id+'/uri')
+	if choice != None:
+	    self.player.stop()
+	    self.r.set('/radio/current',id)
+	    self.player.setUri(choice)
+            print 'Setting radio '+id
+        else:
+            print "Erreur, id ("+id+") de radio inconnu."
+
+    def toogleAirPlay(self,state):
+        if state == '1':
+            self.airPlaying('1')
+            self.player.stop()
+            print 'AirPlay starts'
+        else :
+            self.airPlaying('0')
+            print 'AirPlay stops'
+            if self.radioPlaying() == '1':
+                self.player.play()
+                print 'Resume radio playing'
+
+    def toogleRadioPlay(self,id):
+	if id == '-1':
+            print 'Stop playing radio'
+            self.radioPlaying('0')
+            self.player.stop()
+	else:
+            if id != '':
+                self.changeCurrentRadio(id)
+            self.radioPlaying('1')
+            if self.airPlaying() == '0':
+                self.player.play()
+                print 'Playing radio'
+
+    def run(self):
+	ps = self.r.pubsub()
+	ps.subscribe('/radioPlay')
+	ps.subscribe('/airPlaying')
+
+	for item in ps.listen():
+	    chan = item['channel']
+	    msg = item['data']
+	    
+	    if item['type'] == 'message':
+		if chan == '/radioPlay':
+		    self.toogleRadioPlay(msg)
+
+		elif chan == '/airPlaying':
+		    self.toogleAirPlay(msg)
+
+homeSound = HomeSound()
+
+def sigint_handler(signal,frame):
+    print
+    homeSound.toogleRadioPlay('-1')
+    print "Bye ;)"
+    sys.exit(1)
+
+def main():
+    signal.signal(signal.SIGINT, sigint_handler)
+    homeSound.run()
+
+if __name__ == '__main__':
+    main()

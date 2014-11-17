@@ -7,6 +7,7 @@ r = redis.StrictRedis()
 
 r.set('/radio/current','0')
 r.set('/airPlaying','0')
+r.set('/radioPlaying','0')
 
 r.set('/radio/0/name','Europe 1')
 r.set('/radio/0/uri','http://vipicecast.yacast.net/europe1')

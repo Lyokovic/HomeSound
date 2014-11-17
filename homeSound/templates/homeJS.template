@@ -1,49 +1,97 @@
-{% extends "bootstrap/base.html" %}
-{% block title %}This is an example page{% endblock %}
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8">
+		<meta http-equiv="X-UA-Compatible" content="IE=edge">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>Bootstrap 101 Template</title>
+		<!-- Bootstrap -->
+		<!-- Latest compiled and minified CSS -->
+		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css">
+	</head>
+	<body>
+		<div class="container">
+			<div class="row">
+				<div class="col-md-6">
+					<h1>HomeSound</h1>
+					<h3><a href='/'>Refresh !</a></h3>
+					<div class="col-md-4">
+						<p>
+							<br/>
+							Global control : 
+							<div class="btn-group">
+								 <button type="button" class="btn btn-default" id="btnStop">O</button>
+								 <button type="button" class="btn btn-default" id="btnPlay">1</button>
+							</div>
+						</p>
+					</div>
+					<table class="table">
+						<thead>
+							<tr>
+								<th> Radios </th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for id,name in stations %}
+							<tr>
+								<td> 
+									<button type="button" class="btn btn-default btn-station" id="btnStation{{id}}">{{name}}</button>
+								</td>
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
+				</div>
+			</div>
+		</div>
+		</div>
+		<!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+		<!-- Include all compiled plugins (below), or include individual files as needed -->
+		<!-- Latest compiled and minified JavaScript -->
+		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
+		<script>
+			$(document).ready(function(){
+				var playing = {{playing}}
+				var current = {{current}}
+				var updateControl = function(data,status){
+					playing = data
+					if (playing == 1) {
+						$("#btnStop").attr("class","btn btn-default")
+						$("#btnPlay").attr("class","btn btn-success")
+					} else if (playing == 2) {
+						$("#btnStop").attr("class","btn btn-default")
+						$("#btnPlay").attr("class","btn btn-warning")
+					} else {
+						$("#btnStop").attr("class","btn btn-danger")
+						$("#btnPlay").attr("class","btn btn-default")
+					}
+				}
+				var updateStation = function(data,status){
+					$("#btnStation"+current).removeClass("btn-info")
+					$("#btnStation"+current).addClass("btn-default")
+					current = data
+					$("#btnStation"+current).removeClass("btn-default")
+					$("#btnStation"+current).addClass("btn-info")
+				}
 
-{% block content %}
-  <div class="container">
-    <div class="row">
-      <div class="col-md-6">
-        <h1>HomeSound</h1>
-        <h3><a href='/'>Refresh !</a></h3>
-	  <div class="col-md-4">
-	    <p></p>
-	    <p>
-	    Global control : 
-	    {% if playing == '0' %}
-	      <a href=?action=play>Play</a>
-	    {% else %}
-	      <a href=?action=stop>Stop</a>
-	    {% endif %}
-	    </p>
-	  </div>
-	  <table class="table">
-	    <thead>
-	      <tr>
-		<th> Etat </th>
-		<th> Radio </th>
-	      </tr>
-	    </thead>
-	    <tbody>
-	      {% for id,name,state in stations %}
-		<tr>
-		  <td> 
-		    {% if state == '0' %}
-		      <a href=?action=play&radio={{id}}>Choose</a>
-		    {% else %}
-		      Selected
-		    {% endif %}
-		  </td>
-		  <td> {{name}} </td>
-		</tr>
-	      {% endfor %}
-	    </tbody>
-	  </table>
-	  </div>
-      </div>
-    </div>
-  </div>
+				$("#btnStop").click(function(){
+					$.get("playReq?action=stop",updateControl)
+				});
+				$("#btnPlay").click(function(){
+					$.get("playReq?action=play",updateControl)
+				});
 
-{% endblock %}
+				$(".btn-station").click(function(event){
+					//alert('Clicked: ' + event.target.id);
+					$.get("stationReq?radio=" + event.target.id.replace("btnStation", ""),updateStation)
+					$.get("playReq",updateControl)
+				});
+
+				updateControl(playing, 0)
+				updateStation(current, 0)
+			});
+		</script>
+	</body>
+</html>
 

@@ -2,55 +2,61 @@
 # -*- coding:utf-8 -*-
 
 from flask import Flask, request, render_template
-from flask_bootstrap import Bootstrap
+#from flask_bootstrap import Bootstrap
 import redis
 import time
 
 app = Flask(__name__)
-Bootstrap(app)
+#Bootstrap(app)
 
 r = redis.StrictRedis()
 
+
 @app.route("/")
 def index():
-	playing = r.get('/radioPlaying')
+    playing = getPlaying()
+    current = r.get('/radio/current')
+    if current == None:
+        current = 0
 
-	idStations = [x.split('/')[2] for x in r.keys('/radio/*/name') if x != 'current']
-	stations=[]
-	for station in idStations:
-	    name = r.get('/radio/'+station+'/name')
-	    if r.get('/radio/current') == station:
-		state = '1'
-	    else:
-		state = '0'
-	    stations.append((station,name,state))
-	return render_template('page.template', playing=playing,stations=stations)
+    idStations = [x.split('/')[2] for x in r.keys('/radio/*/name') if x != 'current']
+    stations=[]
+    for station in idStations:
+        name = r.get('/radio/'+station+'/name')
+        stations.append((station,name))
+    return render_template('homeJS.template', playing=playing,stations=stations,current=current)
+
 @app.route("/playReq")
 def playReq():
-	action = request.args.get('action')
-	radio = request.args.get('radio')
-	if action != None:
-		if action == 'play':
-			if radio == None:
-				radio = ''
-			r.publish('/radioPlay',radio)
-		elif action == 'stop':
-			r.publish('/radioPlay','-1')
+    action = request.args.get('action')
+    if action != None:
+        if action == 'play':
+            r.publish('/radioPlay','')
+        elif action == 'stop':
+            r.publish('/radioPlay','-1')
+        time.sleep(0.1)
 
-	time.sleep(0.2)
-	playing = r.get('/radioPlaying')
+    playing = getPlaying()
 
-	idStations = [x.split('/')[2] for x in r.keys('/radio/*/name') if x != 'current']
-	stations=[]
-	for station in idStations:
-	    name = r.get('/radio/'+station+'/name')
-	    if r.get('/radio/current') == station:
-		state = '1'
-	    else:
-		state = '0'
-	    stations.append((station,name,state))
+    return playing
 
-	return playing
+@app.route("/stationReq")
+def stationReq():
+    radio = request.args.get('radio')
+    if radio != None:
+        r.publish('/radioPlay',radio)
+        time.sleep(0.1)
+
+    current = r.get('/radio/current');
+    return current
+
+def getPlaying():
+    if (r.get('/radioPlaying') == '1'):
+        if (r.get('/airPlaying') == '1'):
+            return '2'
+        return  '1'
+    return '0'
+
 
 if __name__ == '__main__':
-	app.run(host='0.0.0.0',port=8080)
+    app.run(host='0.0.0.0',port=8080)
