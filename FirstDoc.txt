@@ -1,0 +1,54 @@
+HomeSound :
+
+Sur raspberry pi et relié à une sortie audio
+v1 - Unique
+v2 - Contrôllable grâce à wiring pi et un système électronique adapté
+v3 - Personnalisation
+
+v1 :
+Deux sources audio : flux internet (radio) ou flux AirPlay (shairport)
+Langage : Python 2
+Base et messages : redis
+Interface : Web - Bootstrap - Flask
+
+Interface :
+Interface minimale proposant aux choix une liste de flux avec une "icone" devant celui sélectionné
+	Premier flux = éteint
+	On peut évoluer avec un bouton activé désactivé (à voir)
+
+On choisit le flux en le cliquant dans la liste, il est sélectionné et joué immédiatement si aucun flux AirPlay
+
+Gestion des flux :
+Le programme shairport envoie un message redis '/airPlaying' '0'/'1' si la lecture s'arrête/commence et set la variable 'airPlaying' à '0'/'1'
+Losrqu'une lecture AirPlay commence, on coupe le flux radio, que l'on réactive si la lecture s'arrête.
+
+Base Redis :
+	/radio/<id>/name
+	/radio/<id>/url
+	/radio/current (dernière radio lue)
+	/radioPlaying '0'/'1'
+Messages :
+	/radioPlay ''/'<id>'/'-1' lis la radio courante/donnée/stoppe
+
+v1.1:
+Ajout du JS/AJAX sur la page web pour mise à jour dynamique
+Requêtes sur la page /playReq
+
+v2:
+Plusieurs périphériques de sortie contrôllés par les GPIO
+	On utilise WiringPi pour python
+
+Chaque périphérique a un input : bouton activé/désactivé, et un output : audio activé/desactivé
+	Les périphériques sont représentés dans redis par un identifiant, et contiennnt : nom, pin out, pin in
+		/device/<id>/name
+		/device/<id>/buttonPin
+		/device/<id>/audioPin
+L'activation ou désactivation est gérée par un module python. Il reçoit deux messages : /device/enable <id> ou /device/disable <id>
+
+Le module 'enceinte' est passif : il contient l'enceinte et le bouton seulement, pas d'intelligence. 3 fils
+Le module électonique est simple : lorsque le pin out est actif, on ferme un relai, ouvert sinon.
+
+L'interface Web est améliorée pour permettre de visualiser les périphériques actifs et les contrôler si besoin
+
+v3:
+Amélioration de l'interface, permettant l'ajout de périphériques et de flux
