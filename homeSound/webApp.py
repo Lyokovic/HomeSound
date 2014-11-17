@@ -1,7 +1,8 @@
 #! /usr/bin/python2
 # -*- coding:utf-8 -*-
 
-from flask import Flask, request, render_template
+from flask import Flask, Response, request, render_template
+#from gevent.wsgi import WSGIServer
 #from flask_bootstrap import Bootstrap
 import redis
 import time
@@ -57,6 +58,23 @@ def getPlaying():
         return  '1'
     return '0'
 
+@app.route("/stream")
+def stream():
+    def event_stream():
+        pubsub = r.pubsub()
+        pubsub.subscribe('/playing')
+        try:
+            for item in pubsub.listen():
+                if item['type'] == 'message':
+                    playing = item['data'];
+                    yield 'data: %s\n\n' % playing
+        except GeneratorExit:
+            print "Déconnecté"
+            pubsub.unsubscribe()
+            return
+
+    return Response(event_stream(),  mimetype="text/event-stream")
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0',port=8080)
+    app.run(host='0.0.0.0',port=8080, threaded=True)
+

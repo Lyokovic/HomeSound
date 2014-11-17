@@ -61,6 +61,16 @@ class HomeSound:
                 self.player.play()
                 print 'Playing radio'
 
+    def sendUpdate(self):
+        update = '0'
+        #if self.radioPlaying() == '1':
+        #    if self.airPlaying() == '1':
+        #        update = '2'
+        #    else:
+        #        update = '1'
+
+        self.r.publish('/playing',update)
+
     def run(self):
 	ps = self.r.pubsub()
 	ps.subscribe('/radioPlay')
@@ -76,6 +86,8 @@ class HomeSound:
 
 		elif chan == '/airPlaying':
 		    self.toogleAirPlay(msg)
+            self.sendUpdate()
+
 
 homeSound = HomeSound()
 
