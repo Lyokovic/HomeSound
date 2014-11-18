@@ -1,11 +1,26 @@
 HomeSound :
 
 Sur raspberry pi et relié à une sortie audio
-v1 - Unique
-v2 - Contrôllable grâce à wiring pi et un système électronique adapté
-v3 - Personnalisation
+v0.1 - Unique **OK**
+v0.1.1 - Interface web dynamique / temps réel **OK**
+v0.2 - Contrôllable grâce à wiring pi et un système électronique adapté
+v0.2.1 - Packaging
+v0.3 - Personnalisation
 
-v1 :
+v1.0 - Quand ce sera mûr ;)
+
+Idées (ordre d'importance/interêt):
+- Programmation de la radio pour allumage/arrêt automatique
+- Forcage de l'arrêt de la lecture AirPlay
+- Affichage des données AirPlay de la piste en cours
+- Gestion d'annonces audio (avec choix d'enceintes)
+
+- Problème de l'authentification pour certaines fonctionalitées ?
+
+- Enceintes "désynchronisées" différents flux sur différentes enceintes (HomeSound v2)
+	1 rPi par enceinte, commande avec API / transmission par PulseAudio...
+
+v0.1 :
 Deux sources audio : flux internet (radio) ou flux AirPlay (shairport)
 Langage : Python 2
 Base et messages : redis
@@ -27,18 +42,24 @@ Base Redis :
 	/radio/<id>/url
 	/radio/current (dernière radio lue)
 	/radioPlaying '0'/'1'
+	/airPlaying '0'/'1'
 Messages :
 	/radioPlay ''/'<id>'/'-1' lis la radio courante/donnée/stoppe
+	/airPlaying '0'/'1' lecture AirPlay en cours ou non
 
-v1.1:
+v0.1.1:
 Ajout du JS/AJAX sur la page web pour mise à jour dynamique
-Requêtes sur la page /playReq
+Requêtes sur l'état de lecture par la page /playReq
+Requêtes sur la station en cours de lecture par la page /stationReq
 
-v2:
+Mise à jour de la page web en temps réel grâce à la technologie des "server-sent events",
+inscription aux "events" sur la page /stream.
+
+v0.2:
 Plusieurs périphériques de sortie contrôllés par les GPIO
 	On utilise WiringPi pour python
 
-Chaque périphérique a un input : bouton activé/désactivé, et un output : audio activé/desactivé
+Chaque périphérique a un input : bouton activation/désactivation, et un output : audio activé/desactivé
 	Les périphériques sont représentés dans redis par un identifiant, et contiennnt : nom, pin out, pin in
 		/device/<id>/name
 		/device/<id>/buttonPin
@@ -50,5 +71,9 @@ Le module électonique est simple : lorsque le pin out est actif, on ferme un re
 
 L'interface Web est améliorée pour permettre de visualiser les périphériques actifs et les contrôler si besoin
 
-v3:
+v0.2.1:
+Packaging du système
+Unité SystemD, intégration de shairport ou non ?, utilisateur système dédié...
+
+v0.3:
 Amélioration de l'interface, permettant l'ajout de périphériques et de flux
