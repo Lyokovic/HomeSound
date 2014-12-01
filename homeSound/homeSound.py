@@ -2,6 +2,7 @@
 # -*- coding:utf-8 -*-
 
 from player import Player
+from speakers import Speakers
 import redis
 import signal,sys
 
@@ -9,6 +10,7 @@ class HomeSound:
     def __init__(self):
 	self.r = redis.StrictRedis()
 	self.player = Player()
+	self.speakers = Speakers()
 	self.player.setUri(self.r.get('/radio/'+self.r.get('/radio/current')+'/uri'))
 
 
@@ -61,6 +63,27 @@ class HomeSound:
                 self.player.play()
                 print 'Playing radio'
 
+    def toogleDevice(self,chan,id):
+	pin = self.r.get('/device/'+id+'/audioPin')
+        state = self.r.get('/device/'+id+'/enabled')
+	if pin != None and state != None:
+            if chan == '/device/toogle':
+                if state == '0':
+                    self.speakers.enable(pin)
+                    self.r.set('/device/'+id+'/enabled','1')
+                else:
+                    self.speakers.disable(pin)
+                    self.r.set('/device/'+id+'/enabled','0')
+
+            elif chan == '/device/enable':
+                self.speakers.enable(pin)
+                self.r.set('/device/'+id+'/enabled','1')
+            else:
+                self.speakers.disable(pin)
+                self.r.set('/device/'+id+'/enabled','0')
+        else:
+            print "Erreur, id ("+id+") d'enceinte inconnu."
+
     def sendUpdate(self):
         update = '0'
         #if self.radioPlaying() == '1':
@@ -76,6 +99,10 @@ class HomeSound:
 	ps.subscribe('/radioPlay')
 	ps.subscribe('/airPlaying')
 
+	ps.subscribe('/device/enable')
+	ps.subscribe('/device/disable')
+	ps.subscribe('/device/toogle')
+
 	for item in ps.listen():
 	    chan = item['channel']
 	    msg = item['data']
@@ -86,6 +113,9 @@ class HomeSound:
 
 		elif chan == '/airPlaying':
 		    self.toogleAirPlay(msg)
+
+                elif chan[:7] == '/device':
+		    self.toogleDevice(chan,msg)
             self.sendUpdate()
 
 

@@ -39,6 +39,22 @@
 							{% endfor %}
 						</tbody>
 					</table>
+					<table class="table">
+						<thead>
+							<tr>
+								<th> Speakers </th>
+							</tr>
+						</thead>
+						<tbody>
+							{% for id,name in speakers %}
+							<tr>
+								<td> 
+									<button type="button" class="btn btn-default btn-speaker" id="btnSpeaker{{id}}">{{name}}</button>
+								</td>
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
 				</div>
 			</div>
 		</div>
@@ -50,8 +66,11 @@
 		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
 		<script>
 			$(document).ready(function(){
-				var playing = {{playing}}
-				var current = {{current}}
+				//var playing = {{playing}}
+				//var current = {{current}}
+				var current = 0;
+
+				// Update the playing control area
 				var updateControl = function(data,status){
 					playing = data
 					if (playing == 1) {
@@ -65,6 +84,8 @@
 						$("#btnPlay").attr("class","btn btn-default")
 					}
 				}
+
+				// Update the stations list
 				var updateStation = function(data,status){
 					$("#btnStation"+current).removeClass("btn-info")
 					$("#btnStation"+current).addClass("btn-default")
@@ -73,30 +94,60 @@
 					$("#btnStation"+current).addClass("btn-info")
 				}
 
+				// Update the speakers list
+				var updateSpeaker = function(data,status){
+					if (data.state == '1') {
+						$("#btnSpeaker"+data.speaker).removeClass("btn-default")
+						$("#btnSpeaker"+data.speaker).addClass("btn-info")
+					} else {
+						$("#btnSpeaker"+data.speaker).removeClass("btn-info")
+						$("#btnSpeaker"+data.speaker).addClass("btn-default")
+					}
+				}
+				
+				// Update every dynamic things on the page from json
+				var updateAll = function(json) {
+					data = $.parseJSON(json)
+					console.log('json',data)
+
+					updateControl(data.playing,0)
+					updateStation(data.current,0)
+					$.each(data.speakers,function(key,value){
+						updateSpeaker(value,0)
+					});
+				}
+
 				$("#btnStop").click(function(){
-					$.get("playReq?action=stop",updateControl)
+					//$.get("playReq?action=stop",updateControl)
+					$.get("playReq?action=stop")
 				});
 				$("#btnPlay").click(function(){
-					$.get("playReq?action=play",updateControl)
+					//$.get("playReq?action=play",updateControl)
+					$.get("playReq?action=play")
 				});
 
 				$(".btn-station").click(function(event){
-					//alert('Clicked: ' + event.target.id);
-					$.get("stationReq?radio=" + event.target.id.replace("btnStation", ""),updateStation)
-					$.get("playReq",updateControl)
+					//$.get("stationReq?radio=" + event.target.id.replace("btnStation", ""),updateStation)
+					//$.get("playReq",updateControl)
+					$.get("stationReq?radio=" + event.target.id.replace("btnStation", ""))
+				});
+
+				$(".btn-speaker").click(function(event){
+					//$.getJSON("speakerReq?speaker=" + event.target.id.replace("btnSpeaker", ""),updateSpeaker)
+					//$.get("playReq",updateControl)
+					$.getJSON("speakerReq?speaker=" + event.target.id.replace("btnSpeaker", ""))
 				});
 
 				function sse() {
 					var source = new EventSource('/stream');
-					source.onmessage = function(e) {
-						$.get("stationReq",updateStation)
-						$.get("playReq",updateControl)
+					source.onmessage = function(event) {
+						updateAll(event.data);
 					};
 				}
 
-				updateControl(playing, 0)
-				updateStation(current, 0)
-				sse()
+				// Register the server-sent events then update the page
+				sse();
+				$.get("statusReq",updateAll);
 			});
 		</script>
 	</body>

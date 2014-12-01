@@ -20,3 +20,11 @@ r.set('/radio/2/uri','http://streaming.radio.rtl2.fr/rtl2-1-44-96')
 
 r.set('/radio/5/name','France Inter')
 r.set('/radio/5/uri','http://mp3.live.tv-radio.com/franceinter/all/franceinterhautdebit.mp3')
+
+r.set('/device/0/name','Enceinte 1')
+r.set('/device/0/audioPin','0')
+r.set('/device/0/enabled','0')
+
+r.set('/device/1/name','Enceinte 2')
+r.set('/device/1/audioPin','1')
+r.set('/device/1/enabled','0')

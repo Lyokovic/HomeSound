@@ -5,6 +5,7 @@ from flask import Flask, Response, request, render_template
 #from gevent.wsgi import WSGIServer
 #from flask_bootstrap import Bootstrap
 import redis
+import json
 import time
 
 app = Flask(__name__)
@@ -25,7 +26,14 @@ def index():
     for station in idStations:
         name = r.get('/radio/'+station+'/name')
         stations.append((station,name))
-    return render_template('homeJS.template', playing=playing,stations=stations,current=current)
+
+    idSpeakers = [x.split('/')[2] for x in r.keys('/device/*/name')]
+    speakers=[]
+    for speaker in idSpeakers:
+        name = r.get('/device/'+speaker+'/name')
+        speakers.append((speaker,name))
+
+    return render_template('homeJS.template', playing=playing,stations=stations,speakers=speakers,current=current)
 
 @app.route("/playReq")
 def playReq():
@@ -51,6 +59,36 @@ def stationReq():
     current = r.get('/radio/current');
     return current
 
+@app.route("/speakerReq")
+def speakerReq():
+    action = request.args.get('action')
+    speaker = request.args.get('speaker')
+    if (speaker != None):
+        if action == None:
+            r.publish('/device/toogle',speaker)
+        elif action == 'enable':
+            r.publish('/device/enable',speaker)
+        else:
+            r.publish('/device/disable',speaker)
+        time.sleep(0.1)
+
+    state = r.get('/device/'+speaker+'/enabled');
+    if state != None:
+        return json.dumps({'speaker':speaker,'state':state})
+    else:
+        return json.dumps({speaker:'-1'})
+
+@app.route("/statusReq")
+def statusReq():
+    playing = getPlaying()
+    current = r.get('/radio/current')
+    idSpeakers = [x.split('/')[2] for x in r.keys('/device/*/enabled')]
+    speakers=[]
+    for speaker in idSpeakers:
+        state = r.get('/device/'+speaker+'/enabled')
+        speakers.append({'speaker':speaker,'state':state})
+    return json.dumps({'playing':playing,'current':current,'speakers':speakers})
+
 def getPlaying():
     if (r.get('/radioPlaying') == '1'):
         if (r.get('/airPlaying') == '1'):
@@ -66,8 +104,7 @@ def stream():
         try:
             for item in pubsub.listen():
                 if item['type'] == 'message':
-                    playing = item['data'];
-                    yield 'data: %s\n\n' % playing
+                    yield 'data: %s\n\n' % statusReq()
         except GeneratorExit:
             print "Déconnecté"
             pubsub.unsubscribe()
