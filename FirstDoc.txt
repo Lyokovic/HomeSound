@@ -64,14 +64,33 @@ Chaque périphérique a un input : bouton activation/désactivation, et un outpu
 		/device/<id>/name
 		/device/<id>/buttonPin
 		/device/<id>/audioPin
+		/device/<id>/enabled
 L'activation ou désactivation est gérée par un module python. Il reçoit deux messages : /device/enable <id> ou /device/disable <id>
 
 Le module 'enceinte' est passif : il contient l'enceinte et le bouton seulement, pas d'intelligence. 3 fils
 Le module électonique est simple : lorsque le pin out est actif, on ferme un relai, ouvert sinon.
 
 L'interface Web est améliorée pour permettre de visualiser les périphériques actifs et les contrôler si besoin
+Requête pour l'activation/désactivation d'une enceinte par la page /speakerReq
 
 v0.2.1:
+Amélioration de la communication web client-serveur
+	- La mise à jour de la page (station en cours, enceintes actives...) est maintenant fait uniquement grâce aux server-sent events qui envoie le statut complet du système (voir ci-après).
+	- Nouvelle URI /statusReq qui renvoit le statut complet du système (voir ci-après).
+
+Le status complet du système est envoyé en JSON, il contient toutes les données dynamiques de la page :
+{
+	playing: '0'/'1'/'2',
+	current: '<id de la station courante>',
+	speakers: [{
+		speaker: '<id de l'enceinte>',
+		state: '0'/'1'
+	},{
+		...
+	}]
+}
+
+v0.2.2:
 Packaging du système
 Unité SystemD, intégration de shairport ou non ?, utilisateur système dédié...
 
