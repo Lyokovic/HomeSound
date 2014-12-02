@@ -3,8 +3,8 @@ HomeSound :
 Sur raspberry pi et relié à une sortie audio
 v0.1 - Unique **OK**
 v0.1.1 - Interface web dynamique / temps réel **OK**
-v0.2 - Contrôllable grâce à wiring pi et un système électronique adapté
-v0.2.1 - Packaging
+v0.2 - Contrôlable grâce à rpi.gpio et un système électronique adapté **OK**
+v0.2.2 - Packaging
 v0.3 - Personnalisation
 
 v1.0 - Quand ce sera mûr ;)
@@ -25,6 +25,7 @@ Deux sources audio : flux internet (radio) ou flux AirPlay (shairport)
 Langage : Python 2
 Base et messages : redis
 Interface : Web - Bootstrap - Flask
+GPIOs : RPi.GPIO
 
 Interface :
 Interface minimale proposant aux choix une liste de flux avec une "icone" devant celui sélectionné
@@ -65,7 +66,7 @@ Chaque périphérique a un input : bouton activation/désactivation, et un outpu
 		/device/<id>/buttonPin
 		/device/<id>/audioPin
 		/device/<id>/enabled
-L'activation ou désactivation est gérée par un module python. Il reçoit deux messages : /device/enable <id> ou /device/disable <id>
+L'activation ou désactivation est gérée par le module homeSound. Il peut recevoir tois messages : /device/enable <id>, /device/disable <id> ou /device/toogle <id>
 
 Le module 'enceinte' est passif : il contient l'enceinte et le bouton seulement, pas d'intelligence. 3 fils
 Le module électonique est simple : lorsque le pin out est actif, on ferme un relai, ouvert sinon.
