@@ -64,22 +64,21 @@ class HomeSound:
                 print 'Playing radio'
 
     def toogleDevice(self,chan,id):
-	pin = self.r.get('/device/'+id+'/audioPin')
         state = self.r.get('/device/'+id+'/enabled')
-	if pin != None and state != None:
+	if state != None:
             if chan == '/device/toogle':
                 if state == '0':
-                    self.speakers.enable(pin)
+                    self.speakers.enable(id)
                     self.r.set('/device/'+id+'/enabled','1')
                 else:
-                    self.speakers.disable(pin)
+                    self.speakers.disable(id)
                     self.r.set('/device/'+id+'/enabled','0')
 
             elif chan == '/device/enable':
-                self.speakers.enable(pin)
+                self.speakers.enable(id)
                 self.r.set('/device/'+id+'/enabled','1')
             else:
-                self.speakers.disable(pin)
+                self.speakers.disable(id)
                 self.r.set('/device/'+id+'/enabled','0')
         else:
             print "Erreur, id ("+id+") d'enceinte inconnu."
