@@ -97,3 +97,13 @@ Unité SystemD, intégration de shairport ou non ?, utilisateur système dédié
 
 v0.3:
 Amélioration de l'interface, permettant l'ajout de périphériques et de flux
+
+v0.3.1:
+Ajout d'une page à l'interface permettant l'ajout et la suppression de radios. L'url de la page est : /editRadios
+
+Les nouveaux messages Redis suivants ont été ajoutés, il permettent l'ajout/suppression des radios.
+	/radio/add '{name:<nom de la station>,uri:<uri du flux>}'
+	/radio/delete '<id>'
+
+Pour le moment, la suppression de la radio courante n'est pas supporté, la fonction est désactivée pour éviter une instabilité probable.
+
