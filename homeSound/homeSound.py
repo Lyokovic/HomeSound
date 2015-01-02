@@ -4,6 +4,7 @@
 from player import Player
 from speakers import Speakers
 import redis
+import json
 import signal,sys
 
 class HomeSound:
@@ -83,6 +84,42 @@ class HomeSound:
         else:
             print "Erreur, id ("+id+") d'enceinte inconnu."
 
+    def editRadios(self,chan,data):
+        if chan == '/radio/delete':
+            keys = self.r.keys('/radio/'+data+'/*')
+            current = self.r.get('/radio/current')
+            if data != current:
+                if keys != []:
+                    ret = self.r.delete(*keys)
+                    if ret != 0:
+                        print "Radio id: "+data+" deleted"
+                else:
+                    print "Error deleting radio, id: "+data+" unknown"
+            else:
+                print "Error: cannot delete current radio"
+
+        elif chan == '/radio/add':
+            data = json.loads(data)
+            stationsId = [x.split('/')[2] for x in self.r.keys('/radio/*/name')]
+
+            try:
+                for station in stationsId:
+                    name = self.r.get('/radio/'+station+'/name')
+                    if data['name'] == name:
+                        print "Radio "+name+" already exists"
+                        return
+
+                for i in range(0,255):
+                    s = str(i)
+                    if s not in stationsId:
+                        self.r.set('/radio/'+s+'/name',data['name'])
+                        self.r.set('/radio/'+s+'/uri',data['uri'])
+                        print "Radio "+data['name']+" with id:"+s+" added"
+                        break
+            except KeyError:
+                print "Error adding radio, wrong data"
+
+
     def sendUpdate(self):
         update = '0'
         #if self.radioPlaying() == '1':
@@ -102,6 +139,9 @@ class HomeSound:
 	ps.subscribe('/device/disable')
 	ps.subscribe('/device/toogle')
 
+	ps.subscribe('/radio/add')
+	ps.subscribe('/radio/delete')
+
 	for item in ps.listen():
 	    chan = item['channel']
 	    msg = item['data']
@@ -115,6 +155,10 @@ class HomeSound:
 
                 elif chan[:7] == '/device':
 		    self.toogleDevice(chan,msg)
+
+                elif chan[:6] == '/radio':
+		    self.editRadios(chan,msg)
+
             self.sendUpdate()
 
 

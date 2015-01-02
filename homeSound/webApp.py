@@ -35,6 +35,47 @@ def index():
 
     return render_template('homeJS.template', playing=playing,stations=stations,speakers=speakers,current=current)
 
+@app.route("/editRadios")
+def editRadios():
+    # Get GET parameters
+    action = request.args.get('action')
+    id = request.args.get('id')
+    name = request.args.get('name')
+    uri = request.args.get('uri')
+    form = request.args.get('form')
+
+    ret = '-1'
+    if action != None:
+        if action == 'delete':
+            if id != None:
+                r.publish('/radio/delete',id)
+                ret = id
+        elif action == 'add':
+            if name != None and uri != None:
+                message = json.dumps({'name':name,'uri':uri})
+                r.publish('/radio/add',message)
+                ret = '0'
+            else:
+                ret = '-1 Name and/or URL parameter missing'
+
+        if form == None:
+            return ret
+
+        time.sleep(0.2)
+
+    # Get current station and station list
+    current = r.get('/radio/current')
+    if current == None:
+        current = 0
+    idStations = [x.split('/')[2] for x in r.keys('/radio/*/name') if x != 'current']
+    idStations.sort()
+    stations=[]
+    for station in idStations:
+        stationName = r.get('/radio/'+station+'/name')
+        stations.append((station,stationName))
+
+    return render_template('editRadios.template', stations=stations,current=current)
+
 @app.route("/playReq")
 def playReq():
     action = request.args.get('action')

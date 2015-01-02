@@ -10,15 +10,14 @@
 		<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.0/css/bootstrap.min.css">
 	</head>
 	<body>
-
 		<nav class="navbar navbar-default" role="navigation">
 			<div class="navbar-header">
 				<a class="navbar-brand" href="/">HomeSound</a>
 			</div>
 			<div>
 				<ul class="nav navbar-nav">
-					<li class="active"><a href="/">Control</a></li>
-					<li><a href="editRadios">Radio Edit</a></li>
+					<li><a href="/">Control</a></li>
+					<li class="active"><a href="editRadios">Radio Edit</a></li>
 				</ul>
 			</div>
 		</nav>
@@ -26,14 +25,7 @@
 		<div class="container">
 			<div class="row">
 				<div class="col-md-4">
-					<h4>Main control</h4>
-					<p>
-					<div class="btn-group">
-						<button type="button" class="btn btn-default" id="btnStop">O</button>
-						<button type="button" class="btn btn-default" id="btnPlay">1</button>
-					</div>
-					</p>
-
+					<h4>Edit radio list</h4>
 					<table class="table">
 						<thead>
 							<tr>
@@ -44,28 +36,30 @@
 							{% for id,name in stations %}
 							<tr>
 								<td> 
-									<button type="button" class="btn btn-default btn-station" id="btnStation{{id}}">{{name}}</button>
+									{{name}}
 								</td>
-							</tr>
-							{% endfor %}
-						</tbody>
-					</table>
-					<table class="table">
-						<thead>
-							<tr>
-								<th> Speakers </th>
-							</tr>
-						</thead>
-						<tbody>
-							{% for id,name in speakers %}
-							<tr>
 								<td> 
-									<button type="button" class="btn btn-default btn-speaker" id="btnSpeaker{{id}}">{{name}}</button>
+									<a href="editRadios?action=delete&id={{id}}&form" ><button type="button" class="btn btn-danger" id="btnStation{{id}}">Delete</button></a>
 								</td>
 							</tr>
 							{% endfor %}
 						</tbody>
 					</table>
+
+					<h4>Add a new radio</h4>
+					<form action="editRadios" method="GET">
+						<input type="hidden" name="action" value="add" />
+						<div class="form-group">
+							<label for="radioName">Radio name:</label>
+							<input type="text" class="form-control" id="radioName" name="name">
+						</div>
+						<div class="form-group">
+							<label for="radioUri">Radio URI:</label>
+							<input type="text" class="form-control" id="radioUri" name="uri">
+						</div>
+						<input type="hidden" name="form" />
+						<button type="submit" class="btn btn-default">Add</button>
+					</form>
 				</div>
 			</div>
 		</div>
@@ -76,6 +70,7 @@
 		<!-- Latest compiled and minified JavaScript -->
 		<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script>
 		<script>
+		/*
 			$(document).ready(function(){
 				//var playing = {{playing}}
 				//var current = {{current}}
@@ -160,6 +155,7 @@
 				sse();
 				$.get("statusReq",updateAll);
 			});
+		// */
 		</script>
 	</body>
 </html>
